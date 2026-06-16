@@ -1,0 +1,397 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);background:transparent}
+.app{max-width:700px;margin:0 auto;padding:1rem 0}
+.tabs{display:flex;gap:4px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.5rem}
+.tab{padding:8px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-0.5px}
+.tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.section{display:none}.section.active{display:block}
+.day-header{font-size:13px;color:var(--color-text-secondary);margin-bottom:12px}
+.review-count{font-size:22px;font-weight:500;margin-bottom:4px}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--color-text-secondary);font-size:14px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:1.5rem}
+.card-item{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;cursor:pointer;position:relative}
+.card-item:hover{border-color:var(--color-border-secondary)}
+.card-item.flashcard .card-type-badge{background:var(--color-background-info);color:var(--color-text-info)}
+.card-item.note .card-type-badge{background:var(--color-background-success);color:var(--color-text-success)}
+.card-type-badge{font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);display:inline-block;margin-bottom:8px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-meta{font-size:12px;color:var(--color-text-secondary)}
+.card-img{width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:8px}
+.due-badge{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#E24B4A}
+.btn{padding:8px 16px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;font-size:14px;color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.btn-primary:hover{opacity:0.85}
+.btn-success{background:var(--color-background-success);color:var(--color-text-success);border-color:transparent}
+.btn-danger{background:var(--color-background-danger);color:var(--color-text-danger);border-color:transparent}
+.form-row{margin-bottom:12px}
+label{font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+input[type=text],textarea{width:100%;font-size:14px}
+textarea{height:80px;resize:vertical}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:1.5rem;width:min(480px,90vw);max-height:85vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:500;margin-bottom:1rem}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.review-modal{min-height:280px;display:flex;flex-direction:column}
+.review-front,.review-back{flex:1}
+.review-front h3,.review-back h3{font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.review-content{font-size:16px;line-height:1.7;margin-bottom:12px}
+.review-img{max-width:100%;border-radius:8px;margin-bottom:12px}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1rem 0}
+.reveal-btn{width:100%;margin-top:auto}
+.rating-btns{display:flex;gap:8px;margin-top:12px}
+.rating-btns button{flex:1}
+.progress-bar-wrap{background:var(--color-background-secondary);border-radius:4px;height:4px;margin-bottom:1.5rem}
+.progress-bar{background:var(--color-text-primary);height:4px;border-radius:4px;transition:width 0.3s}
+.interval-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.chip{font-size:12px;padding:3px 10px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.chip.active{background:var(--color-text-primary);color:var(--color-background-primary)}
+.img-preview{max-width:100%;height:100px;object-fit:cover;border-radius:6px;margin-top:8px}
+.type-toggle{display:flex;gap:8px;margin-bottom:1rem}
+.type-btn{flex:1;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary)}
+.type-btn.active{border-color:var(--color-text-primary);color:var(--color-text-primary);font-weight:500}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center}
+.stat-num{font-size:24px;font-weight:500;margin-bottom:2px}
+.stat-label{font-size:12px;color:var(--color-text-secondary)}
+.upcoming-list{display:flex;flex-direction:column;gap:8px}
+.upcoming-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.upcoming-title{font-size:14px;font-weight:500}
+.upcoming-date{font-size:12px;color:var(--color-text-secondary)}
+</style>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">间隔重复复习软件 — 管理卡片并按艾宾浩斯曲线提醒复习</h2>
+
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today')"><i class="ti ti-calendar-check" aria-hidden="true"></i> 今日复习</button>
+    <button class="tab" onclick="switchTab('cards')"><i class="ti ti-cards" aria-hidden="true"></i> 全部卡片</button>
+    <button class="tab" onclick="switchTab('stats')"><i class="ti ti-chart-bar" aria-hidden="true"></i> 统计</button>
+  </div>
+
+  <div id="sec-today" class="section active">
+    <div id="today-header"></div>
+    <div id="today-cards"></div>
+  </div>
+
+  <div id="sec-cards" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-size:13px;color:var(--color-text-secondary)" id="all-count">0 张卡片</span>
+      <button class="btn btn-primary" onclick="openCreate()"><i class="ti ti-plus" aria-hidden="true"></i> 新建卡片</button>
+    </div>
+    <div class="card-grid" id="all-cards-grid"></div>
+  </div>
+
+  <div id="sec-stats" class="section">
+    <div class="stats-row" id="stats-summary"></div>
+    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;font-weight:500">未来7天到期</p>
+    <div class="upcoming-list" id="upcoming-list"></div>
+  </div>
+</div>
+
+<div id="modal-create" style="display:none" class="modal-overlay" onclick="closeIfOverlay(event,'modal-create')">
+  <div class="modal">
+    <h2 id="create-title">新建卡片</h2>
+    <div class="type-toggle">
+      <button class="type-btn active" id="type-flash" onclick="setType('flash')"><i class="ti ti-refresh" aria-hidden="true"></i> 闪卡（正/背面）</button>
+      <button class="type-btn" id="type-note" onclick="setType('note')"><i class="ti ti-notes" aria-hidden="true"></i> 笔记卡片</button>
+    </div>
+    <div id="form-flash">
+      <div class="form-row">
+        <label>正面（问题）</label>
+        <textarea id="f-front" placeholder="输入问题或提示…"></textarea>
+      </div>
+      <div class="form-row">
+        <label>正面图片（可选）</label>
+        <input type="file" accept="image/*" onchange="previewImg(this,'prev-front')">
+        <img id="prev-front" class="img-preview" style="display:none">
+      </div>
+      <div class="form-row">
+        <label>背面（答案）</label>
+        <textarea id="f-back" placeholder="输入答案或解释…"></textarea>
+      </div>
+      <div class="form-row">
+        <label>背面图片（可选）</label>
+        <input type="file" accept="image/*" onchange="previewImg(this,'prev-back')">
+        <img id="prev-back" class="img-preview" style="display:none">
+      </div>
+    </div>
+    <div id="form-note" style="display:none">
+      <div class="form-row">
+        <label>标题</label>
+        <input type="text" id="n-title" placeholder="笔记标题…">
+      </div>
+      <div class="form-row">
+        <label>内容</label>
+        <textarea id="n-content" placeholder="输入笔记内容…" style="height:120px"></textarea>
+      </div>
+      <div class="form-row">
+        <label>图片（可选）</label>
+        <input type="file" accept="image/*" onchange="previewImg(this,'prev-note')">
+        <img id="prev-note" class="img-preview" style="display:none">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-create')">取消</button>
+      <button class="btn btn-primary" onclick="saveCard()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-review" style="display:none" class="modal-overlay">
+  <div class="modal review-modal" style="min-height:360px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--color-text-secondary)" id="rev-progress-label"></span>
+      <button class="btn" style="padding:4px 10px;font-size:12px" onclick="closeModal('modal-review')">结束</button>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="rev-bar" style="width:0%"></div></div>
+    <div id="rev-body"></div>
+  </div>
+</div>
+
+<div id="modal-view" style="display:none" class="modal-overlay" onclick="closeIfOverlay(event,'modal-view')">
+  <div class="modal">
+    <div id="view-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="deleteCurrentCard()"><i class="ti ti-trash" aria-hidden="true"></i> 删除</button>
+      <button class="btn" onclick="closeModal('modal-view')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const INTERVALS=[1,3,7,14,30,60,120];
+let cards=JSON.parse(localStorage.getItem('sr_cards')||'[]');
+let currentType='flash';
+let editId=null;
+let reviewQueue=[];
+let revIdx=0;
+let revealed=false;
+let viewCardId=null;
+
+function save(){localStorage.setItem('sr_cards',JSON.stringify(cards))}
+function today(){return new Date().toISOString().slice(0,10)}
+function addDays(d,n){let dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return '';let dt=new Date(d+'T00:00:00');return `${dt.getMonth()+1}月${dt.getDate()}日`}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>{b.classList.toggle('active',['today','cards','stats'][i]===t)});
+  ['today','cards','stats'].forEach(s=>document.getElementById('sec-'+s).classList.toggle('active',s===t));
+  if(t==='today')renderToday();
+  if(t==='cards')renderAll();
+  if(t==='stats')renderStats();
+}
+
+function renderToday(){
+  const todayStr=today();
+  const due=cards.filter(c=>c.nextReview<=todayStr);
+  const hdr=document.getElementById('today-header');
+  const cont=document.getElementById('today-cards');
+  hdr.innerHTML=`<p class="review-count">${due.length} 张</p><p class="day-header">今日待复习 · ${fmtDate(todayStr)}</p>`;
+  if(due.length===0){
+    cont.innerHTML=`<div class="empty-state"><i class="ti ti-check" style="font-size:32px;display:block;margin-bottom:8px" aria-hidden="true"></i>今天没有需要复习的内容<br><span style="font-size:12px;margin-top:4px;display:block">新建卡片开始学习吧</span></div>`;
+    return;
+  }
+  cont.innerHTML=`<div class="card-grid">${due.map(c=>cardHTML(c,true)).join('')}</div>
+  <button class="btn btn-primary" style="width:100%" onclick="startReview()"><i class="ti ti-player-play" aria-hidden="true"></i> 开始复习全部 (${due.length})</button>`;
+}
+
+function cardHTML(c,showDue){
+  const img=c.type==='flash'?(c.frontImg||c.backImg):c.img;
+  return `<div class="card-item ${c.type}" onclick="viewCard('${c.id}')">
+    ${showDue&&c.nextReview<=today()?'<div class="due-badge" title="今日到期"></div>':''}
+    <span class="card-type-badge">${c.type==='flash'?'闪卡':'笔记'}</span>
+    ${img?`<img src="${img}" class="card-img" alt="">`:''}
+    <div class="card-title">${c.type==='flash'?c.front:c.title}</div>
+    <div class="card-meta">第${c.level||0+1}次 · 下次 ${fmtDate(c.nextReview)}</div>
+  </div>`;
+}
+
+function renderAll(){
+  document.getElementById('all-count').textContent=`${cards.length} 张卡片`;
+  document.getElementById('all-cards-grid').innerHTML=cards.length?cards.map(c=>cardHTML(c,true)).join(''):`<div class="empty-state" style="grid-column:1/-1">还没有卡片</div>`;
+}
+
+function renderStats(){
+  const todayStr=today();
+  const due=cards.filter(c=>c.nextReview<=todayStr).length;
+  const learned=cards.length;
+  const mastered=cards.filter(c=>c.level>=INTERVALS.length-1).length;
+  document.getElementById('stats-summary').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${learned}</div><div class="stat-label">总卡片数</div></div>
+    <div class="stat-card"><div class="stat-num">${due}</div><div class="stat-label">今日待复习</div></div>
+    <div class="stat-card"><div class="stat-num">${mastered}</div><div class="stat-label">已掌握</div></div>`;
+  const upcoming=[];
+  for(let i=0;i<7;i++){
+    const d=addDays(todayStr,i);
+    const cnt=cards.filter(c=>c.nextReview===d).length;
+    if(cnt>0)upcoming.push({date:d,cnt});
+  }
+  document.getElementById('upcoming-list').innerHTML=upcoming.length?upcoming.map(u=>`
+    <div class="upcoming-item">
+      <div><div class="upcoming-title">${i===0?'今天':fmtDate(u.date)}</div><div class="upcoming-date">${u.date}</div></div>
+      <span class="chip active">${u.cnt} 张</span>
+    </div>`).join(''):`<div style="color:var(--color-text-secondary);font-size:14px">未来7天没有到期卡片</div>`;
+}
+
+function openCreate(){
+  editId=null;
+  document.getElementById('create-title').textContent='新建卡片';
+  ['f-front','f-back','n-title','n-content'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['prev-front','prev-back','prev-note'].forEach(id=>{const el=document.getElementById(id);if(el){el.src='';el.style.display='none'}});
+  setType('flash');
+  document.getElementById('modal-create').style.display='flex';
+}
+
+function setType(t){
+  currentType=t;
+  document.getElementById('type-flash').classList.toggle('active',t==='flash');
+  document.getElementById('type-note').classList.toggle('active',t==='note');
+  document.getElementById('form-flash').style.display=t==='flash'?'block':'none';
+  document.getElementById('form-note').style.display=t==='note'?'block':'none';
+}
+
+function previewImg(input,previewId){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{const img=document.getElementById(previewId);img.src=e.target.result;img.style.display='block'};
+  reader.readAsDataURL(file);
+}
+
+function getImgData(previewId){
+  const el=document.getElementById(previewId);
+  return el&&el.style.display!=='none'?el.src:null;
+}
+
+function saveCard(){
+  if(currentType==='flash'){
+    const front=document.getElementById('f-front').value.trim();
+    const back=document.getElementById('f-back').value.trim();
+    if(!front&&!back){alert('请填写正面或背面内容');return}
+    const card={id:Date.now().toString(),type:'flash',front,back,frontImg:getImgData('prev-front'),backImg:getImgData('prev-back'),level:0,nextReview:today(),created:today()};
+    cards.push(card);
+  } else {
+    const title=document.getElementById('n-title').value.trim();
+    const content=document.getElementById('n-content').value.trim();
+    if(!title&&!content){alert('请填写标题或内容');return}
+    const card={id:Date.now().toString(),type:'note',title,content,img:getImgData('prev-note'),level:0,nextReview:today(),created:today()};
+    cards.push(card);
+  }
+  save();closeModal('modal-create');renderToday();renderAll();
+}
+
+function viewCard(id){
+  const c=cards.find(x=>x.id===id);if(!c)return;
+  viewCardId=id;
+  let html='';
+  if(c.type==='flash'){
+    html=`<p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">闪卡</p>
+    <p style="font-size:15px;font-weight:500;margin-bottom:4px">正面</p>
+    <p style="font-size:14px;margin-bottom:${c.frontImg?'8px':'1rem'}">${c.front||'（无文字）'}</p>
+    ${c.frontImg?`<img src="${c.frontImg}" style="max-width:100%;border-radius:8px;margin-bottom:1rem" alt="">`:''}
+    <hr class="divider">
+    <p style="font-size:15px;font-weight:500;margin-bottom:4px">背面</p>
+    <p style="font-size:14px;margin-bottom:${c.backImg?'8px':'0'}">${c.back||'（无文字）'}</p>
+    ${c.backImg?`<img src="${c.backImg}" style="max-width:100%;border-radius:8px" alt="">`:''}`;
+  } else {
+    html=`<p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">笔记</p>
+    <p style="font-size:15px;font-weight:500;margin-bottom:8px">${c.title||'（无标题）'}</p>
+    ${c.img?`<img src="${c.img}" style="max-width:100%;border-radius:8px;margin-bottom:8px" alt="">`:''}
+    <p style="font-size:14px;line-height:1.7;white-space:pre-wrap">${c.content||''}</p>`;
+  }
+  html+=`<hr class="divider"><p style="font-size:12px;color:var(--color-text-secondary)">复习进度：第${(c.level||0)+1}阶段 · 下次复习 ${fmtDate(c.nextReview)}</p>`;
+  document.getElementById('view-body').innerHTML=html;
+  document.getElementById('modal-view').style.display='flex';
+}
+
+function deleteCurrentCard(){
+  if(!viewCardId)return;
+  if(!confirm('确定删除这张卡片？'))return;
+  cards=cards.filter(c=>c.id!==viewCardId);
+  save();closeModal('modal-view');renderToday();renderAll();
+}
+
+function startReview(){
+  const todayStr=today();
+  reviewQueue=cards.filter(c=>c.nextReview<=todayStr);
+  if(!reviewQueue.length)return;
+  revIdx=0;revealed=false;
+  document.getElementById('modal-review').style.display='flex';
+  showReviewCard();
+}
+
+function showReviewCard(){
+  if(revIdx>=reviewQueue.length){
+    document.getElementById('rev-body').innerHTML=`<div style="text-align:center;padding:2rem 0"><i class="ti ti-trophy" style="font-size:40px;display:block;margin-bottom:12px" aria-hidden="true"></i><p style="font-size:18px;font-weight:500">全部复习完成！</p><p style="font-size:13px;color:var(--color-text-secondary);margin-top:8px">共复习了 ${reviewQueue.length} 张卡片</p></div>`;
+    document.getElementById('rev-progress-label').textContent='';
+    document.getElementById('rev-bar').style.width='100%';
+    return;
+  }
+  const c=reviewQueue[revIdx];
+  revealed=false;
+  const pct=Math.round(revIdx/reviewQueue.length*100);
+  document.getElementById('rev-bar').style.width=pct+'%';
+  document.getElementById('rev-progress-label').textContent=`${revIdx+1} / ${reviewQueue.length}`;
+  let html='';
+  if(c.type==='flash'){
+    html=`<div class="review-front">
+      <h3>正面</h3>
+      ${c.frontImg?`<img src="${c.frontImg}" class="review-img" alt="">`:''}
+      <p class="review-content">${c.front||'（无文字）'}</p>
+      <button class="btn reveal-btn" onclick="revealAnswer()">显示背面 <i class="ti ti-eye" aria-hidden="true"></i></button>
+      <div id="rev-back" style="display:none">
+        <hr class="divider">
+        <h3>背面</h3>
+        ${c.backImg?`<img src="${c.backImg}" class="review-img" alt="">`:''}
+        <p class="review-content">${c.back||'（无文字）'}</p>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">记住了吗？</p>
+        <div class="rating-btns">
+          <button class="btn btn-danger" onclick="rateCard(false)">没记住</button>
+          <button class="btn btn-success" onclick="rateCard(true)">记住了</button>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    html=`<div>
+      <h3>笔记</h3>
+      <p class="review-content" style="font-weight:500;font-size:16px">${c.title||''}</p>
+      ${c.img?`<img src="${c.img}" class="review-img" alt="">`:''}
+      <p class="review-content" style="font-size:14px;white-space:pre-wrap">${c.content||''}</p>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">复习完成？</p>
+      <div class="rating-btns">
+        <button class="btn btn-danger" onclick="rateCard(false)">需要再看</button>
+        <button class="btn btn-success" onclick="rateCard(true)">已掌握</button>
+      </div>
+    </div>`;
+  }
+  document.getElementById('rev-body').innerHTML=html;
+}
+
+function revealAnswer(){
+  document.querySelector('.reveal-btn').style.display='none';
+  document.getElementById('rev-back').style.display='block';
+}
+
+function rateCard(remembered){
+  const c=reviewQueue[revIdx];
+  const ci=cards.findIndex(x=>x.id===c.id);
+  if(ci===-1){revIdx++;showReviewCard();return}
+  if(remembered){
+    cards[ci].level=Math.min((cards[ci].level||0)+1,INTERVALS.length-1);
+  } else {
+    cards[ci].level=0;
+  }
+  const interval=INTERVALS[cards[ci].level];
+  cards[ci].nextReview=addDays(today(),interval);
+  save();
+  revIdx++;showReviewCard();
+}
+
+function closeModal(id){document.getElementById(id).style.display='none'}
+function closeIfOverlay(e,id){if(e.target===document.getElementById(id))closeModal(id)}
+
+renderToday();
+</script>
